@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'house',
     'rent',
+    'tenant',
     'user',
     'rest_framework',
     'corsheaders',

@@ -60,7 +60,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
 
-    REQUIRED_FIELDS = ['name', 'role']
+    REQUIRED_FIELDS = ['name']
     USERNAME_FIELD = 'phone'
 
     objects = CustomUserManager()

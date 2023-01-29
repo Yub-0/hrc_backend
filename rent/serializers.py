@@ -1,87 +1,55 @@
-from django.http import Http404
+import datetime
+
 from rest_framework import serializers
 
-from house.models import Room
-from rent.models import RentCategory, Payment, Rent
-from user.models import MyUser
+from rent.models import RentCategory, RentPayment
+from tenant.models import TenantRoom
 
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RentCategory
-        fields = '__all__'
-
-
-class PaymentShowSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = '__all__'
-        depth = 1
-
-
-class PaymentSerializer(serializers.Serializer):
-    cat = serializers.CharField()
-    payment = serializers.FloatField()
-    room = serializers.IntegerField()
-    month = serializers.IntegerField()
-    user = serializers.IntegerField()
+# class RentPaymentShow
+class CategorySerializer(serializers.Serializer):
+    category = serializers.CharField(max_length=25)
+    per = serializers.DecimalField(decimal_places=2, max_digits=9, allow_null=True)
+    amount = serializers.DecimalField(decimal_places=2, max_digits=9, allow_null=True)
+    unit = serializers.CharField(max_length=25, allow_null=True)
+    mandetory = serializers.BooleanField(required=False)
 
     def create(self, validated_data):
         try:
-            cat = Category.objects.get(category=validated_data['cat'])
-        except Category.DoesNotExist:
-            cat = Category.objects.create(category=validated_data['cat'])
+            category = RentCategory.objects.create(category=validated_data.get('category'), per=validated_data.get('per'),
+                                                   amount=validated_data.get('amount'), unit=validated_data.get('unit'),
+                                                   mandetory=validated_data.get('mandetory'))
+        except:
+            raise serializers.ValidationError('lwal')
+        return category
+
+
+class RentPaymentSerializer(serializers.Serializer):
+    category = CategorySerializer(many=True)
+    total_paid = serializers.DecimalField(max_digits=9, decimal_places=2)
+    return_amount = serializers.DecimalField(max_digits=9, decimal_places=2)
+    total_amount = serializers.DecimalField(max_digits=9, decimal_places=2)
+    save = serializers.BooleanField(default=False)
+    extra_charge = serializers.DecimalField(max_digits=9, decimal_places=2, allow_null=True)
+    tenant = serializers.IntegerField()
+    room = serializers.IntegerField()
+
+    def create(self, validated_data):
+        t_room = TenantRoom.objects.get(tenant__id=validated_data.get('tenant'), room__id=validated_data.get('room'))
         try:
-            room = Room.objects.get(id=validated_data['room'])
-        except Room.DoesNotExist:
-            raise Http404
-        payment = Payment.objects.create(cat=cat, month=validated_data['month'],
-                                         room=room, payment=validated_data['payment'])
-        rent = Rent.objects.get(room=room)
-        rent.payment.add(payment)
-        rent.save()
+            if validated_data.get('save'):
+                payment = RentPayment.objects.create(room=t_room, total_paid=validated_data.get('total_paid'),
+                                                     return_amount=validated_data.get('return_amount'), total_amount=validated_data.get('total_amount'),
+                                                     extra_charge=validated_data.get('extra_charge'), is_paid=False, created_date=datetime.datetime.now())
+            else:
+                payment = RentPayment.objects.create(room=t_room, total_paid=validated_data.get('total_paid'),
+                                                     return_amount=validated_data.get('return_amount'), total_amount=validated_data.get('total_amount'),
+                                                     extra_charge=validated_data.get('extra_charge'), is_paid=True, created_date=datetime.datetime.now(),
+                                                     payment_date=datetime.datetime.now())
+        except:
+            raise serializers.ValidationError('Something Went Wrong!')
+        for category in validated_data.get('category'):
+            payment.category.add(category)
         return payment
 
-
-class RentShowSerializer(serializers.ModelSerializer):
-    status = serializers.SerializerMethodField()
-    tenant = serializers.SerializerMethodField()
-    month = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Rent
-        fields = '__all__'
-        depth = 1
-
-    def get_month(self, obj):
-        return obj.get_month_display()
-
-    def get_status(self, obj):
-        return obj.get_status_display()
-
-    def get_tenant(self, obj):
-        return obj.tenant.name
-
-
-class RentSerializer(serializers.Serializer):
-    room = serializers.IntegerField()
-    tenant = serializers.IntegerField()
-    month = serializers.IntegerField()
-    date = serializers.DateField()
-
-    def create(self, validated_data):
-        try:
-            user = MyUser.objects.get(id=validated_data['tenant'])
-        except MyUser.DoesNotExist:
-            raise Http404
-        try:
-            rom = Room.objects.get(id=validated_data['room'])
-        except Room.DoesNotExist:
-            raise Http404
-        try:
-            rent = Rent.objects.get(room=rom, tenant=user, date=validated_data['date'])
-        except Rent.DoesNotExist:
-            r = rom.room_rent
-            rent = Rent.objects.create(room=rom, tenant=user, date=validated_data['date'],
-                                       month=validated_data['month'], total_rent=r)
-        return rent
+    def update(self, instance, validated_data):
+        return instance

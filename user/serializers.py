@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
 from phonenumber_field.serializerfields import PhoneNumberField
@@ -35,52 +36,9 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        password = make_password('Nepal123')
+        validated_data['password'] = make_password(validated_data['password'])
         user = MyUser.objects.create(**validated_data)
         return user
-
-
-# class OwnerSerializer(serializers.Serializer):
-#     phone = PhoneNumberField()
-#     birthdate = serializers.DateField()
-#     gender = serializers.IntegerField()
-#     name = serializers.CharField()
-#     permanent_address = serializers.CharField(allow_blank=True)
-#     role = serializers.IntegerField()
-#     password = serializers.CharField()
-#     date_joined = serializers.DateField(required=False)
-#
-#     plate = serializers.CharField()
-#     address = serializers.CharField()
-#     image = serializers.ImageField(required=False)
-#     floor = serializers.IntegerField()
-#
-#     def create(self, validated_data):
-#         try:
-#             MyUser.objects.get(phone=validated_data['phone'])
-#             raise serializers.ValidationError("User with this number already exist!!")
-#         except MyUser.DoesNotExist:
-#             try:
-#                 House.objects.get(plate_no=validated_data['plate'])
-#                 raise serializers.ValidationError("Plate number already exist!!")
-#             except House.DoesNotExist:
-#                 house = House.objects.create(plate_no=validated_data['plate'], address=validated_data['address'])
-#                 if 'image' in validated_data:
-#                     if validated_data['image'] is None or validated_data['image'] == '':
-#                         pass
-#                     else:
-#                         house.image = validated_data['image']
-#                         house.save()
-#             f = validated_data['floor']
-#             if f:
-#                 p = inflect.engine()
-#                 for a in range(f):
-#                     Floor.objects.create(floor=p.ordinal(a+1), house=house)
-#             password = make_password(validated_data['password'])
-#             user = MyUser.objects.create(phone=validated_data['phone'], password=password, house=house,
-#                                          gender=validated_data['gender'], role=validated_data['role'],
-#                                          birthdate=validated_data['birthdate'], name=validated_data['name'])
-#             return user
 
 
 class LoginSerializer(serializers.Serializer):
@@ -94,7 +52,6 @@ class LoginSerializer(serializers.Serializer):
         password = data['password']
         user = authenticate(phone=phone, password=password)
         if user is None:
-            print('lol')
             raise serializers.ValidationError("Invalid login credentials")
         refresh = MyTokenObtainPairSerializer.get_token(user)
 
