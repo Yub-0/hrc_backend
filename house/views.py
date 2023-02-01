@@ -12,14 +12,14 @@ class HouseView(generics.GenericAPIView):
     def get(self, request):
         user = request.user
         try:
-            house = House.objects.get(owner=user)
+            house = House.objects.filter(owner=user)
         except House.DoesNotExist:
             return Response("owner has no house registered")
-        serializer = HouseShowSerializer(house)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = HouseShowSerializer(house, many=True).data
+        return Response(serializer, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = HouseSerializer(data=request.data)
+        serializer = HouseSerializer(context={'request': request}, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -39,7 +39,3 @@ class RoomView(generics.GenericAPIView):
                 'room': RoomShowSerializer(s).data
             }
             return Response(res, status=status.HTTP_201_CREATED)
-
-
-
-

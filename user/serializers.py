@@ -42,13 +42,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    phone = PhoneNumberField()
+    phone = PhoneNumberField(required=False)
+    email = serializers.CharField(max_length=25)
     password = serializers.CharField(max_length=128, write_only=True)
     access = serializers.CharField(read_only=True)
     refresh = serializers.CharField(read_only=True)
 
     def validate(self, data, *args):
-        phone = data['phone']
+        phone = '+9779849784723'
         password = data['password']
         user = authenticate(phone=phone, password=password)
         if user is None:

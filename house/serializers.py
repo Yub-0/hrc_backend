@@ -20,14 +20,12 @@ class HouseSerializer(serializers.Serializer):
                                          floors=validated_data['floors'], address=validated_data['address'],
                                          owner=user)
         p = inflect.engine()
-        for a in range(validated_data['floor']):
+        for a in range(validated_data['floors']):
             Floor.objects.create(floor=p.ordinal(a), house=house)
         return house
 
 
 class HouseShowSerializer(serializers.ModelSerializer):
-    user = UserSerializer(many=True)
-
     class Meta:
         model = House
         fields = '__all__'
@@ -46,18 +44,24 @@ class RoomShowSerializer(serializers.ModelSerializer):
         return obj.get_status_display()
 
 
-class RoomSerializer(serializers.Serializer):
+class RoomsSerializer(serializers.Serializer):
     room = serializers.CharField(allow_blank=True)
     location = serializers.CharField(allow_blank=True)
-    floor = serializers.IntegerField()
     room_rent = serializers.DecimalField(decimal_places=2, max_digits=9)
 
+
+class RoomSerializer(serializers.Serializer):
+    house = serializers.IntegerField(allow_null=True)
+    floor = serializers.IntegerField()
+    rooms = RoomsSerializer(many=True)
+
     def create(self, validated_data):
-        user = self.context['request'].user
         try:
-            floor = Floor.objects.get(id=validated_data['floor'], house=user.house)
-        except Floor.DoesNotExist:
+            house = House.objects.get(id=validated_data['house'])
+            floor = Floor.objects.get(id=validated_data['floor'], house=house)
+        except (Floor.DoesNotExist, House.DoesNotExist):
             raise serializers.ValidationError("Floor doesnt exist")
-        room = Room.objects.create(room=validated_data['room'], location=validated_data['location'],
-                                   floor=floor, room_rent=validated_data['room_rent'])
-        return room
+        for room in validated_data['rooms']:
+            Room.objects.create(room=room['room'], location=room['location'],
+                                floor=floor, room_rent=room['room_rent'])
+        return house
