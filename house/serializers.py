@@ -33,7 +33,7 @@ class HouseShowSerializer(serializers.ModelSerializer):
 
 class RoomShowSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
-    tenant = UserShowSerializer()
+    # tenant = UserShowSerializer()
 
     class Meta:
         model = Room

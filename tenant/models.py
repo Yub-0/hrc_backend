@@ -16,7 +16,7 @@ class Tenant(models.Model):
     contact_no = PhoneNumberField(unique=True)
     status = models.CharField(max_length=25, choices=TENANT_STATUS, default='Active')
     entry_date = models.DateTimeField(default=datetime.datetime.now())
-    leave_date = models.DateTimeField(auto_now=False)
+    leave_date = models.DateTimeField(auto_now=False, null=True)
 
 
 class RoomChange(models.Model):
@@ -37,4 +37,4 @@ class TenantRoom(models.Model):
     room = models.ForeignKey('house.Room', on_delete=models.CASCADE)
     status = models.CharField(max_length=25, choices=TENANT_STATUS, default='Active')
     entry_date = models.DateTimeField(default=datetime.datetime.now())
-    leave_date = models.DateTimeField(auto_now=False)
+    leave_date = models.DateTimeField(auto_now=False, null=True)

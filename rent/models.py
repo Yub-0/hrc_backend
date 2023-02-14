@@ -10,13 +10,19 @@ class RentCategory(models.Model):
 
 
 class RentPayment(models.Model):
-    category = models.ManyToManyField(RentCategory)
-    room = models.ForeignKey('tenant.TenantRoom', on_delete=models.CASCADE)
-    total_paid = models.DecimalField(max_digits=9, decimal_places=2)
-    return_amount = models.DecimalField(max_digits=9, decimal_places=2)
+    month = models.CharField(max_length=50)
+    year = models.IntegerField()
+    room = models.ForeignKey('tenant.TenantRoom', on_delete=models.CASCADE, related_name='rent')
+    total_paid = models.DecimalField(max_digits=9, decimal_places=2, null=True)
+    return_amount = models.DecimalField(max_digits=9, decimal_places=2, null=True)
     payment_date = models.DateTimeField(auto_now=False, null=True)
     total_amount = models.DecimalField(max_digits=9, decimal_places=2)
     extra_charge = models.DecimalField(max_digits=9, decimal_places=2, null=True)
     is_paid = models.BooleanField(default=True)
     created_date = models.DateTimeField(auto_now=False, null=True)
 
+
+class RentCategoryPayment(models.Model):
+    payment = models.ForeignKey(RentPayment, on_delete=models.CASCADE, related_name='rent_category')
+    category = models.ForeignKey(RentCategory, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=9, decimal_places=2)
