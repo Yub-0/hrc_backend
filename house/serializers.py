@@ -1,7 +1,6 @@
 from rest_framework import serializers
 import inflect
 from house.models import House, Room, Floor
-from user.serializers import UserSerializer, UserShowSerializer
 
 
 class HouseSerializer(serializers.Serializer):
@@ -33,6 +32,7 @@ class HouseShowSerializer(serializers.ModelSerializer):
 
 class RoomShowSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
+
     # tenant = UserShowSerializer()
 
     class Meta:
@@ -65,3 +65,9 @@ class RoomSerializer(serializers.Serializer):
             Room.objects.create(room=room['room'], location=room['location'],
                                 floor=floor, room_rent=room['room_rent'])
         return house
+
+
+class FloorShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Floor
+        fields = '__all__'

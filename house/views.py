@@ -2,8 +2,8 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from house.models import House, Room
-from house.serializers import HouseSerializer, RoomSerializer, RoomShowSerializer, HouseShowSerializer
+from house.models import House, Room, Floor
+from house.serializers import HouseSerializer, RoomSerializer, RoomShowSerializer, HouseShowSerializer, FloorShowSerializer
 
 
 class HouseView(generics.GenericAPIView):
@@ -39,3 +39,14 @@ class RoomView(generics.GenericAPIView):
                 'room': RoomShowSerializer(s).data
             }
             return Response(res, status=status.HTTP_201_CREATED)
+
+
+class FloorView(generics.GenericAPIView):
+    def get(self, request, pk=None):
+        house = request.GET.get('house')
+        floor = Floor.objects.all()
+        if house:
+            floor = floor.filter(house__id=house)
+        serializer = FloorShowSerializer(floor, many=True).data
+        return Response(serializer, status=status.HTTP_200_OK)
+
